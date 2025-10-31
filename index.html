@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>생태 & 환경 퀴즈 — 10문항</title>
+  <style>
+    :root{
+      --bg1:#0f172a; --bg2:#183153; --card:#0b1220; --accent:#6ee7b7; --muted:#9aa7bf; --glass: rgba(255,255,255,0.04);
+      --radius:16px; --glass-2: rgba(255,255,255,0.02);
+    }
+    *{box-sizing:border-box}
+    html,body,#app{height:100%}
+    body{
+      margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;
+      background:linear-gradient(160deg,var(--bg1),var(--bg2)); color:#e6eef8;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      display:flex;align-items:center;justify-content:center;padding:28px;
+    }
+
+    .container{
+      width:100%;max-width:980px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border-radius:20px;padding:28px;box-shadow: 0 10px 30px rgba(5,10,20,0.6);position:relative;overflow:hidden;
+      border:1px solid rgba(255,255,255,0.04);
+    }
+
+    header{display:flex;align-items:center;gap:16px}
+    .logo{width:68px;height:68px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#60a5fa);display:flex;align-items:center;justify-content:center;font-weight:700;color:#05202a;box-shadow:0 6px 20px rgba(99,102,241,0.12)}
+    .title{line-height:1}
+    .title h1{margin:0;font-size:20px}
+    .title p{margin:0;color:var(--muted);font-size:13px}
+
+    main{display:grid;grid-template-columns: 1fr 360px;gap:22px;margin-top:22px}
+
+    /* Quiz card */
+    .quiz{
+      background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));padding:22px;border-radius:14px;border:1px solid var(--glass);
+      min-height:420px;display:flex;flex-direction:column;justify-content:space-between;
+    }
+
+    .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .progress{height:10px;background:var(--glass-2);border-radius:999px;overflow:hidden;width:48%}
+    .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#60a5fa);width:0%;transition:width .45s ease}
+    .qnum{font-weight:700;color:var(--accent)}
+
+    .question{font-size:20px;margin:8px 0 16px}
+
+    .choices{display:grid;gap:12px}
+    .choice{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:14px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .18s ease}
+    .choice:hover{transform:translateY(-4px);box-shadow:0 8px 18px rgba(2,6,23,0.5)}
+    .choice .k{width:36px;height:36px;border-radius:10px;background:var(--glass);display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:700}
+    .choice p{margin:0}
+
+    .controls{display:flex;justify-content:space-between;align-items:center;margin-top:18px}
+    .btn{background:linear-gradient(90deg,var(--accent),#60a5fa);border:none;padding:12px 16px;border-radius:12px;color:#05202a;font-weight:700;cursor:pointer}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+
+    /* Side panel */
+    .side{display:flex;flex-direction:column;gap:16px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .score{font-size:42px;font-weight:800;color:var(--accent);text-align:center}
+    .small{font-size:13px;color:var(--muted)}
+
+    .summary{display:none}
+    .summary.show{display:block}
+
+    footer{margin-top:16px;color:var(--muted);font-size:13px;text-align:center}
+
+    /* result screen */
+    .result{position:absolute;inset:0;background:linear-gradient(180deg, rgba(2,6,23,0.65), rgba(2,6,23,0.85));display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;backdrop-filter: blur(6px);opacity:0;pointer-events:none;transition:opacity .3s ease}
+    .result.show{opacity:1;pointer-events:auto}
+
+    .confetti-canvas{position:absolute;inset:0;pointer-events:none}
+
+    /* responsive */
+    @media (max-width:980px){main{grid-template-columns:1fr;}.side{order:2}.quiz{order:1}}
+  </style>
+</head>
+<body>
+  <div id="app" class="container" role="application" aria-label="생태 환경 퀴즈 앱">
+    <header>
+      <div class="logo">E🌿</div>
+      <div class="title"><h1>생태 & 환경 퀴즈 — 10문항</h1><p>재미있는 환경 지식 퀴즈로 지구를 지키는 첫걸음!</p></div>
+    </header>
+
+    <main>
+      <section class="quiz" aria-live="polite">
+        <div>
+          <div class="meta">
+            <div class="qnum">문제 <span id="qIndex">1</span>/10</div>
+            <div class="progress" aria-hidden="true"><i id="prog"></i></div>
+          </div>
+
+          <div>
+            <div class="question" id="question">로딩 중...</div>
+            <div class="choices" id="choices"></div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="btn secondary" id="prevBtn">이전</button>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn secondary" id="skipBtn">건너뛰기</button>
+            <button class="btn" id="nextBtn">다음</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side">
+        <div class="card">
+          <div class="small">현재 점수</div>
+          <div class="score" id="score">0</div>
+        </div>
+
+        <div class="card">
+          <div class="small">남은 문제</div>
+          <div style="font-weight:700;font-size:18px" id="left">10</div>
+        </div>
+
+        <div class="card">
+          <div class="small">힌트</div>
+          <div style="margin-top:8px;color:var(--muted);font-size:14px">문제를 잘 모르겠다면 <strong>건너뛰기</strong>를 눌러 다음으로 이동하세요. 마지막에 정답 확인 가능.</div>
+        </div>
+
+        <div class="card summary" id="summaryCard">
+          <div class="small">문제 요약</div>
+          <ol id="qList" style="margin:10px 0 0;padding-left:18px;color:var(--muted)"></ol>
+        </div>
+      </aside>
+    </main>
+
+    <footer>© 자연을 생각하는 퀴즈 • 끝나면 해설과 함께 점수를 확인하세요</footer>
+
+    <div class="result" id="result">
+      <h2 id="resultTitle">축하합니다!</h2>
+      <p id="resultText" style="color:var(--muted);max-width:720px;text-align:center"></p>
+      <div style="margin-top:18px"><button class="btn" id="restart">다시하기</button></div>
+    </div>
+
+    <canvas class="confetti-canvas" id="confetti"></canvas>
+  </div>
+
+  <script>
+    // 질문 데이터 (10문항)
+    const quiz = [
+      {q:"어떤 생태계에 한 종의 개체수가 갑자기 급감하면 그 생태계에 미치는 영향은 무엇일까요?", choices:["먹이사슬 교란","기후 변화 완화","대기 오염 감소","토양 산도 일정 유지"], a:0, explain:"한 종의 급감은 먹이사슬/상호작용을 교란해 다른 종의 개체수 변화나 생태계 기능 저하를 초래합니다."},
+      {q:"탄소 흡수원으로 널리 알려진 것은 무엇인가요?", choices:["사막","도시 고층 빌딩","해양과 숲","화산"], a:2, explain:"숲과 해양은 대기 중의 이산화탄소를 저장하고 흡수하는 중요한 탄소 흡수원입니다."},
+      {q:"외래종이 토착종에 주로 끼치는 부정적 영향은?", choices:["생물다양성 증가","토착종 경쟁과 서식지 파괴","기후 안정화","토양 영양 개선"], a:1, explain:"외래종은 경쟁, 포식, 질병 전달로 토착종 감소나 생태계 교란을 일으킬 수 있습니다."},
+      {q:"재생 가능한 에너지에 해당하지 않는 것은?", choices:["태양광","석탄","풍력","지열"], a:1, explain:"석탄은 화석연료로 재생 불가능하며 온실가스 배출의 주요 원인입니다."},
+      {q:"생물다양성이 중요한 이유로 옳지 않은 것은?", choices:["생태계 안정성 제공","유전자 자원 제공","모든 종이 인간에게 동일한 가치 제공","식량 및 약용자원 보존"], a:2, explain:"다양성은 인간에게 여러 혜택을 주지만, 모든 종이 인간에게 동일한 가치를 제공한다는 주장은 옳지 않습니다."},
+      {q:"플라스틱 쓰레기가 해양에 미치는 영향으로 틀린 것은?", choices:["해양생물의 질식과 섭식 문제","먹이사슬을 통한 독성물질 축적","해양의 염도 상승","미세플라스틱에 의한 건강 문제 우려"], a:2, explain:"플라스틱은 염도 자체를 상승시키지 않습니다. 대신 오염과 생물 영향이 문제입니다."},
+      {q:"지속가능한 소비 행동에 해당하는 예시는?", choices:["일회용품 남용","지역 농산물 구매","불필요한 포장물 선호","에너지를 낭비하는 습관"], a:1, explain:"지역 농산물 구매는 운송에 따른 탄소 배출을 줄이고 지역경제를 돕습니다."},
+      {q:"산림 파괴(삼림 훼손)가 기후에 미치는 직접적 영향은?", choices:["대기 중 이산화탄소 증가","지구 자전 속도 변화","태양 복사량 증가","오존층 회복"], a:0, explain:"나무가 줄어들면 탄소 흡수량이 감소해 대기 중 CO2 증가로 이어집니다."},
+      {q:"도시 열섬 현상을 줄이기 위한 방법으로 적절하지 않은 것은?", choices:["녹지 확대","고반사(반사율 높은) 지붕 사용","아스팔트 면적 확대","수직 정원 도입"], a:2, explain:"아스팔트 면적 확대는 열섬 현상을 악화시키므로 적절하지 않습니다."},
+      {q:"다음 중 생태계 복원 활동의 예로 옳은 것은?", choices:["오염된 하천 정화 및 토종 식물 복원","산호초 파괴 방치","외래종 방치","불필요한 채굴 확장"], a:0, explain:"오염 정화와 토종 식물 복원은 생태계 복원 활동의 대표적 예입니다."}
+    ];
+
+    // 상태
+    let index = 0; let score = 0; const answers = Array(quiz.length).fill(null);
+
+    // 엘리먼트
+    const qIndex = document.getElementById('qIndex');
+    const questionEl = document.getElementById('question');
+    const choicesEl = document.getElementById('choices');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const skipBtn = document.getElementById('skipBtn');
+    const scoreEl = document.getElementById('score');
+    const leftEl = document.getElementById('left');
+    const prog = document.getElementById('prog');
+    const result = document.getElementById('result');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultText = document.getElementById('resultText');
+    const restart = document.getElementById('restart');
+    const summaryCard = document.getElementById('summaryCard');
+    const qList = document.getElementById('qList');
+
+    function render(){
+      const cur = quiz[index];
+      qIndex.textContent = index+1;
+      questionEl.textContent = cur.q;
+      choicesEl.innerHTML = '';
+
+      cur.choices.forEach((c,i)=>{
+        const b = document.createElement('button');
+        b.className='choice'; b.setAttribute('data-i', i);
+        b.setAttribute('aria-pressed', answers[index]===i);
+        b.innerHTML = `<div class="k">${['A','B','C','D'][i]}</div><p>${c}</p>`;
+        b.addEventListener('click', ()=> select(i));
+        if(answers[index]!==null){
+          b.style.pointerEvents = 'none';
+          if(i===quiz[index].a){ b.style.borderColor='rgba(110,231,183,0.55)'}
+          if(answers[index]===i && i!==quiz[index].a){ b.style.borderColor='rgba(240,99,99,0.6)'}
+        }
+        choicesEl.appendChild(b);
+      });
+
+      prevBtn.disabled = index===0;
+      leftEl.textContent = quiz.length - index;
+      prog.style.width = ((index)/quiz.length*100).toFixed(2)+'%';
+
+      // show summary on right when >5
+      summaryCard.classList.toggle('show', index>=5 || answers.some(a=>a!==null));
+      renderSummary();
+    }
+
+    function renderSummary(){
+      qList.innerHTML='';
+      quiz.forEach((qq,i)=>{
+        const li = document.createElement('li'); li.style.marginBottom='8px';
+        const status = answers[i]===null?'<span style="color:var(--muted)">미응답</span>':(answers[i]===qq.a?'<strong style="color:var(--accent)">정답</strong>':'<span style="color:#ff9b9b">오답</span>');
+        li.innerHTML = `${i+1}. ${qq.q.slice(0,40)}... (${status})`;
+        qList.appendChild(li);
+      });
+    }
+
+    function select(choice){
+      if(answers[index]!==null) return;
+      answers[index]=choice;
+      // 채점
+      if(choice===quiz[index].a) score+=10; // 각 문제 10점
+      scoreEl.textContent = score;
+      // 표시 업데이트
+      render();
+      // 자동으로 다음으로
+      setTimeout(()=>{
+        if(index < quiz.length-1) { index++; render(); }
+        else finish();
+      }, 600);
+    }
+
+    prevBtn.addEventListener('click', ()=>{ if(index>0) { index--; render(); }});
+    nextBtn.addEventListener('click', ()=>{ if(index<quiz.length-1){ index++; render(); } else finish(); });
+    skipBtn.addEventListener('click', ()=>{ if(index<quiz.length-1){ index++; render(); } else finish(); });
+    restart.addEventListener('click', ()=>{ location.reload(); });
+
+    function finish(){
+      // final scoring: unanswered give 0
+      result.classList.add('show');
+      if(score>=80){ resultTitle.textContent = '정말 잘했어요!'; resultText.textContent = `10문항 중 정답 ${score/10}개, 점수 ${score}점입니다. 생태 지식이 훌륭해요! 해설을 아래에서 확인하세요.`; runConfetti(); }
+      else if(score>=50){ resultTitle.textContent = '잘했어요! 조금만 더!'; resultText.textContent = `정답 ${score/10}개, 점수 ${score}점입니다. 틀린 문제의 해설을 참고해봐요.`; }
+      else { resultTitle.textContent = '괜찮아요, 배워가는 중이에요'; resultText.textContent = `정답 ${score/10}개, 점수 ${score}점입니다. 해설을 읽고 다시 도전해보세요.`; }
+
+      // show explanations in summary
+      qList.innerHTML='';
+      quiz.forEach((qq,i)=>{
+        const li = document.createElement('li'); li.style.marginBottom='12px';
+        const your = answers[i]===null? '응답 없음' : ['A','B','C','D'][answers[i]] + '. ' + qq.choices[answers[i]];
+        const correct = ['A','B','C','D'][qq.a] + '. ' + qq.choices[qq.a];
+        li.innerHTML = `<strong>${i+1}. ${qq.q}</strong><div style="margin-top:6px;color:var(--muted)">내 응답: ${your}<br>정답: ${correct}<br>해설: ${qq.explain}</div>`;
+        qList.appendChild(li);
+      });
+      summaryCard.classList.add('show');
+    }
+
+    // confetti simple
+    function runConfetti(){
+      const canvas = document.getElementById('confetti');
+      const ctx = canvas.getContext('2d');
+      let W = canvas.width = window.innerWidth; let H = canvas.height = window.innerHeight;
+      const pieces = [];
+      for(let i=0;i<120;i++){ pieces.push({x:Math.random()*W, y:Math.random()*-H, vx:(Math.random()-0.5)*2, vy:Math.random()*3+2, r:Math.random()*6+4, c: `hsl(${Math.random()*360} 80% 60%)`, rot:Math.random()*360})}
+      let t=0;
+      function frame(){ ctx.clearRect(0,0,W,H); pieces.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.rot+=p.vx*3; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180); ctx.fillStyle=p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6); ctx.restore(); }); t++; if(t<220) requestAnimationFrame(frame); else ctx.clearRect(0,0,W,H);
+      }
+      frame();
+      window.addEventListener('resize', ()=>{ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; });
+    }
+
+    // keyboard support
+    window.addEventListener('keydown', (e)=>{
+      if(e.key==='ArrowRight') nextBtn.click();
+      if(e.key==='ArrowLeft') prevBtn.click();
+      if(['1','2','3','4'].includes(e.key)){
+        const idx = parseInt(e.key)-1; const btn = document.querySelector(`.choice[data-i=\"${idx}\"]`); if(btn) btn.click();
+      }
+    });
+
+    // 초기 렌더
+    render();
+  </script>
+</body>
+</html>
